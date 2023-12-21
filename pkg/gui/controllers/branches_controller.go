@@ -115,6 +115,12 @@ func (self *BranchesController) GetKeybindings(opts types.KeybindingsOpts) []*ty
 			Tooltip:     self.c.Tr.ViewBranchUpstreamOptionsTooltip,
 			OpensMenu:   true,
 		},
+		{
+			Key:         opts.GetKey(opts.Config.Branches.SortOrder),
+			Handler:     self.createSortMenu,
+			Description: self.c.Tr.SortOrder,
+			OpensMenu:   true,
+		},
 	}
 }
 
@@ -734,6 +740,18 @@ func (self *BranchesController) createPullRequest(from string, to string) error 
 	}
 
 	return nil
+}
+
+func (self *BranchesController) createSortMenu() error {
+	return self.c.Helpers().Refs.CreateSortOrderMenu([]string{"recency", "date", "alphabetical"}, func(sortOrder string) error {
+		if self.c.GetAppState().LocalBranchSortOrder != sortOrder {
+			self.c.GetAppState().LocalBranchSortOrder = sortOrder
+			self.c.SaveAppStateAndLogError()
+			self.c.Contexts().Branches.SetSelectedLineIdx(0)
+			return self.c.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.BRANCHES}})
+		}
+		return nil
+	})
 }
 
 func (self *BranchesController) checkSelected(callback func(*models.Branch) error) func() error {

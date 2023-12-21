@@ -435,10 +435,13 @@ func (self *RefreshHelper) refreshBranches(refreshWorktrees bool) {
 		// however we need all the reflog entries to populate the recencies of our branches
 		// which allows us to order them correctly. So if we're filtering we'll just
 		// manually load all the reflog commits here
-		var err error
-		reflogCommits, _, err = self.c.Git().Loaders.ReflogCommitLoader.GetReflogCommits(nil, "")
-		if err != nil {
-			self.c.Log.Error(err)
+		// We only need to do this when we're sorting by recency though
+		if self.c.AppState.LocalBranchSortOrder == "recency" {
+			var err error
+			reflogCommits, _, err = self.c.Git().Loaders.ReflogCommitLoader.GetReflogCommits(nil, "")
+			if err != nil {
+				self.c.Log.Error(err)
+			}
 		}
 	}
 
