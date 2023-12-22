@@ -173,6 +173,9 @@ func (self *MenuContext) GetKeybindings(opts types.KeybindingsOpts) []*types.Bin
 
 func (self *MenuContext) OnMenuPress(selectedItem *types.MenuItem) error {
 	if selectedItem != nil && selectedItem.DisabledReason != "" {
+		if self.c.RunningIntegrationTest() {
+			return self.c.ErrorMsg(selectedItem.DisabledReason)
+		}
 		self.c.ErrorToast(self.c.Tr.DisabledMenuItemPrefix + selectedItem.DisabledReason)
 		return nil
 	}
