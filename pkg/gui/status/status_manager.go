@@ -3,6 +3,7 @@ package status
 import (
 	"time"
 
+	"github.com/jesseduffield/gocui"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 	"github.com/samber/lo"
 	"github.com/sasha-s/go-deadlock"
@@ -26,7 +27,7 @@ type WaitingStatusHandle struct {
 }
 
 func (self *WaitingStatusHandle) Show() {
-	self.id = self.statusManager.addStatus(self.message, "waiting")
+	self.id = self.statusManager.addStatus(self.message, "waiting", gocui.ColorCyan)
 	self.renderFunc()
 }
 
@@ -37,6 +38,7 @@ func (self *WaitingStatusHandle) Hide() {
 type appStatus struct {
 	message    string
 	statusType string
+	color      gocui.Attribute
 	id         int
 }
 
@@ -53,8 +55,8 @@ func (self *StatusManager) WithWaitingStatus(message string, renderFunc func(), 
 	handle.Hide()
 }
 
-func (self *StatusManager) AddToastStatus(message string) int {
-	id := self.addStatus(message, "toast")
+func (self *StatusManager) AddToastStatus(message string, color gocui.Attribute) int {
+	id := self.addStatus(message, "toast", color)
 
 	go func() {
 		time.Sleep(time.Second * 2)
@@ -65,22 +67,22 @@ func (self *StatusManager) AddToastStatus(message string) int {
 	return id
 }
 
-func (self *StatusManager) GetStatusString() string {
+func (self *StatusManager) GetStatusString() (string, gocui.Attribute) {
 	if len(self.statuses) == 0 {
-		return ""
+		return "", gocui.ColorDefault
 	}
 	topStatus := self.statuses[0]
 	if topStatus.statusType == "waiting" {
-		return topStatus.message + " " + utils.Loader(time.Now())
+		return topStatus.message + " " + utils.Loader(time.Now()), topStatus.color
 	}
-	return topStatus.message
+	return topStatus.message, topStatus.color
 }
 
 func (self *StatusManager) HasStatus() bool {
 	return len(self.statuses) > 0
 }
 
-func (self *StatusManager) addStatus(message string, statusType string) int {
+func (self *StatusManager) addStatus(message string, statusType string, color gocui.Attribute) int {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
@@ -90,6 +92,7 @@ func (self *StatusManager) addStatus(message string, statusType string) int {
 	newStatus := appStatus{
 		message:    message,
 		statusType: statusType,
+		color:      color,
 		id:         id,
 	}
 	self.statuses = append([]appStatus{newStatus}, self.statuses...)

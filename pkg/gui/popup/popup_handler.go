@@ -22,7 +22,7 @@ type PopupHandler struct {
 	createMenuFn            func(types.CreateMenuOptions) error
 	withWaitingStatusFn     func(message string, f func(gocui.Task) error)
 	withWaitingStatusSyncFn func(message string, f func() error)
-	toastFn                 func(message string)
+	toastFn                 func(message string, color gocui.Attribute)
 	getPromptInputFn        func() string
 	inDemo                  func() bool
 }
@@ -38,7 +38,7 @@ func NewPopupHandler(
 	createMenuFn func(types.CreateMenuOptions) error,
 	withWaitingStatusFn func(message string, f func(gocui.Task) error),
 	withWaitingStatusSyncFn func(message string, f func() error),
-	toastFn func(message string),
+	toastFn func(message string, color gocui.Attribute),
 	getPromptInputFn func() string,
 	inDemo func() bool,
 ) *PopupHandler {
@@ -63,7 +63,11 @@ func (self *PopupHandler) Menu(opts types.CreateMenuOptions) error {
 }
 
 func (self *PopupHandler) Toast(message string) {
-	self.toastFn(message)
+	self.toastFn(message, gocui.ColorCyan)
+}
+
+func (self *PopupHandler) ErrorToast(message string) {
+	self.toastFn(message, gocui.ColorRed)
 }
 
 func (self *PopupHandler) WithWaitingStatus(message string, f func(gocui.Task) error) error {

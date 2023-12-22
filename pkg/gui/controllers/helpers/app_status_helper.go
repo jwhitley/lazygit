@@ -23,7 +23,7 @@ func NewAppStatusHelper(c *HelperCommon, statusMgr func() *status.StatusManager,
 	}
 }
 
-func (self *AppStatusHelper) Toast(message string) {
+func (self *AppStatusHelper) Toast(message string, color gocui.Attribute) {
 	if self.c.RunningIntegrationTest() {
 		// Don't bother showing toasts in integration tests. You can't check for
 		// them anyway, and they would only slow down the test unnecessarily by
@@ -31,7 +31,7 @@ func (self *AppStatusHelper) Toast(message string) {
 		return
 	}
 
-	self.statusMgr().AddToastStatus(message)
+	self.statusMgr().AddToastStatus(message, color)
 
 	self.renderAppStatus()
 }
@@ -87,7 +87,8 @@ func (self *AppStatusHelper) HasStatus() bool {
 }
 
 func (self *AppStatusHelper) GetStatusString() string {
-	return self.statusMgr().GetStatusString()
+	appStatus, _ := self.statusMgr().GetStatusString()
+	return appStatus
 }
 
 func (self *AppStatusHelper) renderAppStatus() {
@@ -95,7 +96,8 @@ func (self *AppStatusHelper) renderAppStatus() {
 		ticker := time.NewTicker(time.Millisecond * utils.LoaderAnimationInterval)
 		defer ticker.Stop()
 		for range ticker.C {
-			appStatus := self.statusMgr().GetStatusString()
+			appStatus, color := self.statusMgr().GetStatusString()
+			self.c.Views().AppStatus.FgColor = color
 			self.c.OnUIThread(func() error {
 				self.c.SetViewContent(self.c.Views().AppStatus, appStatus)
 				return nil
@@ -127,7 +129,8 @@ func (self *AppStatusHelper) renderAppStatusSync(stop chan struct{}) {
 		for {
 			select {
 			case <-ticker.C:
-				appStatus := self.statusMgr().GetStatusString()
+				appStatus, color := self.statusMgr().GetStatusString()
+				self.c.Views().AppStatus.FgColor = color
 				self.c.SetViewContent(self.c.Views().AppStatus, appStatus)
 				// Redraw all views of the bottom line:
 				bottomLineViews := []*gocui.View{
