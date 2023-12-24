@@ -4,27 +4,28 @@ import (
 	"testing"
 
 	"github.com/go-errors/errors"
-	"github.com/spf13/afero"
+	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
 	"github.com/stretchr/testify/assert"
 )
 
-func mockResolveSymlinkFn(p string) (string, error) { return p, nil }
-
 type Scenario struct {
 	Name       string
-	BeforeFunc func(fs afero.Fs)
+	BeforeFunc func(runner *oscommands.FakeCmdObjRunner)
 	Path       string
 	Expected   *RepoPaths
 	Err        error
 }
 
-func TestGetRepoPathsAux(t *testing.T) {
+func TestGetRepoPaths(t *testing.T) {
 	scenarios := []Scenario{
 		{
 			Name: "typical case",
-			BeforeFunc: func(fs afero.Fs) {
+			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
 				// setup for main worktree
-				_ = fs.MkdirAll("/path/to/repo/.git", 0o755)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-toplevel"}, "/path/to/repo", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-common-dir"}, "/path/to/repo/.git", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-superproject-working-tree"}, "", nil)
 			},
 			Path: "/path/to/repo",
 			Expected: &RepoPaths{
@@ -39,10 +40,12 @@ func TestGetRepoPathsAux(t *testing.T) {
 		},
 		{
 			Name: "linked worktree",
-			BeforeFunc: func(fs afero.Fs) {
+			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
 				// setup for linked worktree
-				_ = fs.MkdirAll("/path/to/repo/.git/worktrees/worktree1", 0o755)
-				_ = afero.WriteFile(fs, "/path/to/repo/worktree1/.git", []byte("gitdir: /path/to/repo/.git/worktrees/worktree1"), 0o644)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-toplevel"}, "/path/to/repo/worktree1", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git/worktrees/worktree1", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-common-dir"}, "/path/to/repo/.git", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-superproject-working-tree"}, "", nil)
 			},
 			Path: "/path/to/repo/worktree1",
 			Expected: &RepoPaths{
@@ -54,50 +57,14 @@ func TestGetRepoPathsAux(t *testing.T) {
 				repoName:           "repo",
 			},
 			Err: nil,
-		},
-		{
-			Name: "worktree with trailing separator in path",
-			BeforeFunc: func(fs afero.Fs) {
-				// setup for linked worktree
-				_ = fs.MkdirAll("/path/to/repo/.git/worktrees/worktree1", 0o755)
-				_ = afero.WriteFile(fs, "/path/to/repo/worktree1/.git", []byte("gitdir: /path/to/repo/.git/worktrees/worktree1/"), 0o644)
-			},
-			Path: "/path/to/repo/worktree1",
-			Expected: &RepoPaths{
-				currentPath:        "/path/to/repo/worktree1",
-				worktreePath:       "/path/to/repo/worktree1",
-				worktreeGitDirPath: "/path/to/repo/.git/worktrees/worktree1",
-				repoPath:           "/path/to/repo",
-				repoGitDirPath:     "/path/to/repo/.git",
-				repoName:           "repo",
-			},
-			Err: nil,
-		},
-		{
-			Name: "worktree .git file missing gitdir directive",
-			BeforeFunc: func(fs afero.Fs) {
-				_ = fs.MkdirAll("/path/to/repo/.git/worktrees/worktree2", 0o755)
-				_ = afero.WriteFile(fs, "/path/to/repo/worktree2/.git", []byte("blah"), 0o644)
-			},
-			Path:     "/path/to/repo/worktree2",
-			Expected: nil,
-			Err:      errors.New("failed to get repo git dir path: could not find git dir for /path/to/repo/worktree2: /path/to/repo/worktree2/.git is a file which suggests we are in a submodule or a worktree but the file's contents do not contain a gitdir pointing to the actual .git directory"),
-		},
-		{
-			Name: "worktree .git file gitdir directive points to a non-existing directory",
-			BeforeFunc: func(fs afero.Fs) {
-				_ = fs.MkdirAll("/path/to/repo/.git/worktrees/worktree2", 0o755)
-				_ = afero.WriteFile(fs, "/path/to/repo/worktree2/.git", []byte("gitdir: /nonexistant"), 0o644)
-			},
-			Path:     "/path/to/repo/worktree2",
-			Expected: nil,
-			Err:      errors.New("failed to get repo git dir path: could not find git dir for /path/to/repo/worktree2. /nonexistant does not exist"),
 		},
 		{
 			Name: "submodule",
-			BeforeFunc: func(fs afero.Fs) {
-				_ = fs.MkdirAll("/path/to/repo/.git/modules/submodule1", 0o755)
-				_ = afero.WriteFile(fs, "/path/to/repo/submodule1/.git", []byte("gitdir: /path/to/repo/.git/modules/submodule1"), 0o644)
+			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-toplevel"}, "/path/to/repo/submodule1", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git/modules/submodule1", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-common-dir"}, "/path/to/repo/.git/modules/submodule1", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-superproject-working-tree"}, "/path/to/repo", nil)
 			},
 			Path: "/path/to/repo/submodule1",
 			Expected: &RepoPaths{
@@ -112,9 +79,11 @@ func TestGetRepoPathsAux(t *testing.T) {
 		},
 		{
 			Name: "submodule in nested directory",
-			BeforeFunc: func(fs afero.Fs) {
-				_ = fs.MkdirAll("/path/to/repo/.git/modules/my/submodule1", 0o755)
-				_ = afero.WriteFile(fs, "/path/to/repo/my/submodule1/.git", []byte("gitdir: /path/to/repo/.git/modules/my/submodule1"), 0o644)
+			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-toplevel"}, "/path/to/repo/my/submodule1", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git/modules/my/submodule1", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-common-dir"}, "/path/to/repo/.git/modules/my/submodule1", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-superproject-working-tree"}, "/path/to/repo", nil)
 			},
 			Path: "/path/to/repo/my/submodule1",
 			Expected: &RepoPaths{
@@ -128,27 +97,27 @@ func TestGetRepoPathsAux(t *testing.T) {
 			Err: nil,
 		},
 		{
-			Name: "submodule git dir not under .git/modules",
-			BeforeFunc: func(fs afero.Fs) {
-				_ = fs.MkdirAll("/random/submodule1", 0o755)
-				_ = afero.WriteFile(fs, "/path/to/repo/my/submodule1/.git", []byte("gitdir: /random/submodule1"), 0o644)
+			Name: "git rev-parse returns an error",
+			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-toplevel"}, "", errors.New("fatal: invalid gitfile format: /path/to/repo/worktree2/.git"))
 			},
-			Path:     "/path/to/repo/my/submodule1",
+			Path:     "/path/to/repo/worktree2",
 			Expected: nil,
-			Err:      errors.New("failed to get repo git dir path: could not find git dir for /path/to/repo/my/submodule1: the path '/random/submodule1' is not under `worktrees` or `modules` directories"),
+			Err:      errors.New("'git rev-parse --show-toplevel' failed: fatal: invalid gitfile format: /path/to/repo/worktree2/.git"),
 		},
 	}
 
 	for _, s := range scenarios {
 		s := s
 		t.Run(s.Name, func(t *testing.T) {
-			fs := afero.NewMemMapFs()
+			runner := oscommands.NewFakeRunner(t)
+			cmd := oscommands.NewDummyCmdObjBuilder(runner)
 
 			// prepare the filesystem for the scenario
-			s.BeforeFunc(fs)
+			s.BeforeFunc(runner)
 
 			// run the function with the scenario path
-			repoPaths, err := getRepoPathsAux(fs, mockResolveSymlinkFn, s.Path)
+			repoPaths, err := GetRepoPaths(cmd, s.Path)
 
 			// check the error and the paths
 			if s.Err != nil {

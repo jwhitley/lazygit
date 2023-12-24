@@ -94,7 +94,7 @@ func NewGitCommand(
 		}
 	}
 
-	repoPaths, err := git_commands.GetRepoPaths(cmn.Fs, currentPath)
+	repoPaths, err := git_commands.GetRepoPaths(osCommand.Cmd, currentPath)
 	if err != nil {
 		return nil, errors.Errorf("Error getting repo paths: %v", err)
 	}

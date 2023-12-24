@@ -34,6 +34,7 @@ branch refs/heads/mybranch
 `,
 					nil)
 
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git", nil)
 				_ = fs.MkdirAll("/path/to/repo/.git", 0o755)
 			},
 			expectedWorktrees: []*models.Worktree{
@@ -66,6 +67,8 @@ HEAD 775955775e79b8f5b4c4b56f82fbf657e2d5e4de
 branch refs/heads/mybranch-worktree
 `,
 					nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git/worktrees/repo-worktree", nil)
 
 				_ = fs.MkdirAll("/path/to/repo/.git", 0o755)
 				_ = fs.MkdirAll("/path/to/repo-worktree", 0o755)
@@ -140,6 +143,8 @@ HEAD 775955775e79b8f5b4c4b56f82fbf657e2d5e4de
 branch refs/heads/mybranch-worktree
 `,
 					nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git", nil)
+				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git/worktrees/repo-worktree", nil)
 
 				_ = fs.MkdirAll("/path/to/repo/.git", 0o755)
 				_ = fs.MkdirAll("/path/to/repo-worktree", 0o755)

@@ -58,9 +58,12 @@ func (self *WorktreeLoader) GetWorktrees() ([]*models.Worktree, error) {
 			isPathMissing := self.pathExists(path)
 
 			var gitDir string
-			gitDir, err := getWorktreeGitDirPath(self.Fs, path)
-			if err != nil {
-				self.Log.Warnf("Could not find git dir for worktree %s: %v", path, err)
+			var err error
+			if !isPathMissing {
+				gitDir, err = callGitRevParseWithDir(self.cmd, "--git-dir", path)
+				if err != nil {
+					self.Log.Warnf("Could not find git dir for worktree %s: %v", path, err)
+				}
 			}
 
 			current = &models.Worktree{
