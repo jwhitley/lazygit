@@ -211,6 +211,21 @@ func NewGitCommandAux(
 // this returns the root of the current worktree. So if you start lazygit from within
 // a subdirectory of the worktree, it will start in the context of the root of that worktree
 func findWorktreeRoot(fs afero.Fs, currentPath string) (string, error) {
+	// order for the path.Dir() call below to correctly walk upwards
+	// currentPath must be the real path, without symlinks. otherwise
+	// the directory walk can incorrectly skip nested submodules/worktrees/
+	// etc.
+
+	// afero's MemMapFS, used for lazygit test isolation, doesn't support
+	// symlinks. For now, skip symlink evaluation when we're under test.
+	if fs.Name() != "MemMapFS" {
+		var linkErr error
+		currentPath, linkErr = filepath.EvalSymlinks(currentPath)
+		if linkErr != nil {
+			return "", utils.WrapError(linkErr)
+		}
+	}
+
 	for {
 		// we don't care if .git is a directory or a file: either is okay.
 		_, err := fs.Stat(path.Join(currentPath, ".git"))
