@@ -211,7 +211,7 @@ func NewGitCommandAux(
 // this returns the root of the current worktree. So if you start lazygit from within
 // a subdirectory of the worktree, it will start in the context of the root of that worktree
 func findWorktreeRoot(fs afero.Fs, currentPath string) (string, error) {
-	// order for the path.Dir() call below to correctly walk upwards
+	// In order for the path.Dir() call below to correctly walk upwards
 	// currentPath must be the real path, without symlinks. otherwise
 	// the directory walk can incorrectly skip nested submodules/worktrees/
 	// etc.
