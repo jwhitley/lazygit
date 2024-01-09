@@ -140,7 +140,7 @@ func callGitRevParseWithDir(
 	}
 	res, err := gitCmd.RunWithOutput()
 	if err != nil {
-		return "", errors.Errorf("'git rev-parse %v' failed: %v", gitRevArg, err)
+		return "", errors.Errorf("'%s' failed: %v", gitCmd.ToString(), err)
 	}
 	return strings.TrimSpace(res), nil
 }
