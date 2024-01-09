@@ -103,7 +103,7 @@ func TestGetRepoPaths(t *testing.T) {
 			},
 			Path:     "/path/to/repo/worktree2",
 			Expected: nil,
-			Err:      errors.New("'git rev-parse --show-toplevel' failed: fatal: invalid gitfile format: /path/to/repo/worktree2/.git"),
+			Err:      errors.New("'git rev-parse --path-format=absolute --show-toplevel' failed: fatal: invalid gitfile format: /path/to/repo/worktree2/.git"),
 		},
 	}
 

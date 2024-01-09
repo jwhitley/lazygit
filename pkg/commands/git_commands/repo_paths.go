@@ -122,18 +122,18 @@ func GetRepoPaths(
 
 func callGitRevParse(
 	cmd oscommands.ICmdObjBuilder,
-	gitRevArg string,
+	gitRevArgs ...string,
 ) (string, error) {
-	return callGitRevParseWithDir(cmd, gitRevArg, "")
+	return callGitRevParseWithDir(cmd, "", gitRevArgs...)
 }
 
 func callGitRevParseWithDir(
 	cmd oscommands.ICmdObjBuilder,
-	gitRevArg string,
 	dir string,
+	gitRevArgs ...string,
 ) (string, error) {
 	gitCmd := cmd.New(
-		NewGitCmd("rev-parse").Arg("--path-format=absolute", gitRevArg).ToArgv(),
+		NewGitCmd("rev-parse").Arg("--path-format=absolute").Arg(gitRevArgs...).ToArgv(),
 	).DontLog()
 	if dir != "" {
 		gitCmd.SetWd(dir)
