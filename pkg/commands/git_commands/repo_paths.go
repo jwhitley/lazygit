@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
+	"github.com/jesseduffield/lazygit/pkg/utils"
 	"github.com/spf13/afero"
 )
 
@@ -77,30 +78,23 @@ func GetRepoPaths(
 	// worktreePath used to be the same as currentPath, but since we're
 	// already asking git about these things, ask it for the real
 	// worktree root path
-	worktreePath, err := callGitRevParse(cmd, "--show-toplevel")
+
+	gitDirOutput, err := callGitRevParse(cmd, "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree")
 	if err != nil {
 		return nil, err
 	}
 
-	worktreeGitDirPath, err := callGitRevParse(cmd, "--git-dir")
-	if err != nil {
-		return nil, err
-	}
+	gitDirResults := strings.Split(utils.NormalizeLinefeeds(gitDirOutput), "\n")
+	worktreePath := gitDirResults[0]
+	worktreeGitDirPath := gitDirResults[1]
+	repoGitDirPath := gitDirResults[2]
 
-	repoGitDirPath, err := callGitRevParse(cmd, "--git-common-dir")
-	if err != nil {
-		return nil, err
-	}
-
-	// If we're in a submodule, superprojectWorkingTree will be non-empty;
+	// If we're in a submodule, --show-superproject-working-tree will return
+	// a value, meaning gitDirResults will be length 4. In that case
 	// return the worktree path as the repoPath. Otherwise we're in a
 	// normal repo or a worktree so return the parent of the git common
 	// dir (repoGitDirPath)
-	superprojectWorkingTree, err := callGitRevParse(cmd, "--show-superproject-working-tree")
-	if err != nil {
-		return nil, err
-	}
-	isSubmodule := superprojectWorkingTree != ""
+	isSubmodule := len(gitDirResults) == 4
 
 	var repoPath string
 	if isSubmodule {

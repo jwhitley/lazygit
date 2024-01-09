@@ -1,6 +1,7 @@
 package git_commands
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/go-errors/errors"
@@ -22,10 +23,19 @@ func TestGetRepoPaths(t *testing.T) {
 			Name: "typical case",
 			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
 				// setup for main worktree
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-toplevel"}, "/path/to/repo", nil)
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git", nil)
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-common-dir"}, "/path/to/repo/.git", nil)
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-superproject-working-tree"}, "", nil)
+				expectedOutput := []string{
+					// --show-toplevel
+					"/path/to/repo",
+					// --git-dir
+					"/path/to/repo/.git",
+					// --git-common-dir
+					"/path/to/repo/.git",
+					// --show-superproject-working-tree
+				}
+				runner.ExpectGitArgs(
+					[]string{"rev-parse", "--path-format=absolute", "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree"},
+					strings.Join(expectedOutput, "\n"),
+					nil)
 			},
 			Path: "/path/to/repo",
 			Expected: &RepoPaths{
@@ -42,10 +52,19 @@ func TestGetRepoPaths(t *testing.T) {
 			Name: "linked worktree",
 			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
 				// setup for linked worktree
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-toplevel"}, "/path/to/repo/worktree1", nil)
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git/worktrees/worktree1", nil)
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-common-dir"}, "/path/to/repo/.git", nil)
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-superproject-working-tree"}, "", nil)
+				expectedOutput := []string{
+					// --show-toplevel
+					"/path/to/repo/worktree1",
+					// --git-dir
+					"/path/to/repo/.git/worktrees/worktree1",
+					// --git-common-dir
+					"/path/to/repo/.git",
+					// --show-superproject-working-tree
+				}
+				runner.ExpectGitArgs(
+					[]string{"rev-parse", "--path-format=absolute", "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree"},
+					strings.Join(expectedOutput, "\n"),
+					nil)
 			},
 			Path: "/path/to/repo/worktree1",
 			Expected: &RepoPaths{
@@ -61,10 +80,20 @@ func TestGetRepoPaths(t *testing.T) {
 		{
 			Name: "submodule",
 			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-toplevel"}, "/path/to/repo/submodule1", nil)
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git/modules/submodule1", nil)
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-common-dir"}, "/path/to/repo/.git/modules/submodule1", nil)
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-superproject-working-tree"}, "/path/to/repo", nil)
+				expectedOutput := []string{
+					// --show-toplevel
+					"/path/to/repo/submodule1",
+					// --git-dir
+					"/path/to/repo/.git/modules/submodule1",
+					// --git-common-dir
+					"/path/to/repo/.git/modules/submodule1",
+					// --show-superproject-working-tree
+					"/path/to/repo",
+				}
+				runner.ExpectGitArgs(
+					[]string{"rev-parse", "--path-format=absolute", "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree"},
+					strings.Join(expectedOutput, "\n"),
+					nil)
 			},
 			Path: "/path/to/repo/submodule1",
 			Expected: &RepoPaths{
@@ -80,10 +109,20 @@ func TestGetRepoPaths(t *testing.T) {
 		{
 			Name: "submodule in nested directory",
 			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-toplevel"}, "/path/to/repo/my/submodule1", nil)
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-dir"}, "/path/to/repo/.git/modules/my/submodule1", nil)
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--git-common-dir"}, "/path/to/repo/.git/modules/my/submodule1", nil)
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-superproject-working-tree"}, "/path/to/repo", nil)
+				expectedOutput := []string{
+					// --show-toplevel
+					"/path/to/repo/my/submodule1",
+					// --git-dir
+					"/path/to/repo/.git/modules/my/submodule1",
+					// --git-common-dir
+					"/path/to/repo/.git/modules/my/submodule1",
+					// --show-superproject-working-tree
+					"/path/to/repo",
+				}
+				runner.ExpectGitArgs(
+					[]string{"rev-parse", "--path-format=absolute", "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree"},
+					strings.Join(expectedOutput, "\n"),
+					nil)
 			},
 			Path: "/path/to/repo/my/submodule1",
 			Expected: &RepoPaths{
@@ -99,11 +138,14 @@ func TestGetRepoPaths(t *testing.T) {
 		{
 			Name: "git rev-parse returns an error",
 			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
-				runner.ExpectGitArgs([]string{"rev-parse", "--path-format=absolute", "--show-toplevel"}, "", errors.New("fatal: invalid gitfile format: /path/to/repo/worktree2/.git"))
+				runner.ExpectGitArgs(
+					[]string{"rev-parse", "--path-format=absolute", "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree"},
+					"",
+					errors.New("fatal: invalid gitfile format: /path/to/repo/worktree2/.git"))
 			},
 			Path:     "/path/to/repo/worktree2",
 			Expected: nil,
-			Err:      errors.New("'git rev-parse --path-format=absolute --show-toplevel' failed: fatal: invalid gitfile format: /path/to/repo/worktree2/.git"),
+			Err:      errors.New("'git rev-parse --path-format=absolute --show-toplevel --git-dir --git-common-dir --show-superproject-working-tree' failed: fatal: invalid gitfile format: /path/to/repo/worktree2/.git"),
 		},
 	}
 
