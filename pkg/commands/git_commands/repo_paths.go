@@ -126,12 +126,12 @@ func callGitRevParseWithDir(
 	dir string,
 	gitRevArgs ...string,
 ) (string, error) {
-	gitCmd := cmd.New(
-		NewGitCmd("rev-parse").Arg("--path-format=absolute").Arg(gitRevArgs...).ToArgv(),
-	).DontLog()
+	gitRevParse := NewGitCmd("rev-parse").Arg("--path-format=absolute").Arg(gitRevArgs...)
 	if dir != "" {
-		gitCmd.SetWd(dir)
+		gitRevParse.Dir(dir)
 	}
+
+	gitCmd := cmd.New(gitRevParse.ToArgv()).DontLog()
 	res, err := gitCmd.RunWithOutput()
 	if err != nil {
 		return "", errors.Errorf("'%s' failed: %v", gitCmd.ToString(), err)
