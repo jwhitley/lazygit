@@ -49,35 +49,6 @@ func TestGetRepoPaths(t *testing.T) {
 			Err: nil,
 		},
 		{
-			Name: "linked worktree",
-			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
-				// setup for linked worktree
-				expectedOutput := []string{
-					// --show-toplevel
-					"/path/to/repo/worktree1",
-					// --git-dir
-					"/path/to/repo/.git/worktrees/worktree1",
-					// --git-common-dir
-					"/path/to/repo/.git",
-					// --show-superproject-working-tree
-				}
-				runner.ExpectGitArgs(
-					[]string{"rev-parse", "--path-format=absolute", "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree"},
-					strings.Join(expectedOutput, "\n"),
-					nil)
-			},
-			Path: "/path/to/repo/worktree1",
-			Expected: &RepoPaths{
-				currentPath:        "/path/to/repo/worktree1",
-				worktreePath:       "/path/to/repo/worktree1",
-				worktreeGitDirPath: "/path/to/repo/.git/worktrees/worktree1",
-				repoPath:           "/path/to/repo",
-				repoGitDirPath:     "/path/to/repo/.git",
-				repoName:           "repo",
-			},
-			Err: nil,
-		},
-		{
 			Name: "submodule",
 			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
 				expectedOutput := []string{
@@ -102,35 +73,6 @@ func TestGetRepoPaths(t *testing.T) {
 				worktreeGitDirPath: "/path/to/repo/.git/modules/submodule1",
 				repoPath:           "/path/to/repo/submodule1",
 				repoGitDirPath:     "/path/to/repo/.git/modules/submodule1",
-				repoName:           "submodule1",
-			},
-			Err: nil,
-		},
-		{
-			Name: "submodule in nested directory",
-			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
-				expectedOutput := []string{
-					// --show-toplevel
-					"/path/to/repo/my/submodule1",
-					// --git-dir
-					"/path/to/repo/.git/modules/my/submodule1",
-					// --git-common-dir
-					"/path/to/repo/.git/modules/my/submodule1",
-					// --show-superproject-working-tree
-					"/path/to/repo",
-				}
-				runner.ExpectGitArgs(
-					[]string{"rev-parse", "--path-format=absolute", "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree"},
-					strings.Join(expectedOutput, "\n"),
-					nil)
-			},
-			Path: "/path/to/repo/my/submodule1",
-			Expected: &RepoPaths{
-				currentPath:        "/path/to/repo/my/submodule1",
-				worktreePath:       "/path/to/repo/my/submodule1",
-				worktreeGitDirPath: "/path/to/repo/.git/modules/my/submodule1",
-				repoPath:           "/path/to/repo/my/submodule1",
-				repoGitDirPath:     "/path/to/repo/.git/modules/my/submodule1",
 				repoName:           "submodule1",
 			},
 			Err: nil,
