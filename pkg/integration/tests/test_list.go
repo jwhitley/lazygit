@@ -268,6 +268,7 @@ var tests = []*components.IntegrationTest{
 	worktree.AssociateBranchBisect,
 	worktree.AssociateBranchRebase,
 	worktree.BareRepo,
+	worktree.BareRepoWorktreeConfig,
 	worktree.Crud,
 	worktree.CustomCommand,
 	worktree.DetachWorktreeFromBranch,
