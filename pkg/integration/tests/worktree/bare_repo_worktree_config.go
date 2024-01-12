@@ -14,9 +14,7 @@ var BareRepoWorktreeConfig = NewIntegrationTest(NewIntegrationTestArgs{
 	Description:  "Open lazygit in the worktree of a vcsh-style bare repo and add a file and commit",
 	ExtraCmdArgs: []string{"--git-dir={{.actualPath}}/.bare"},
 	Skip:         false,
-	// passing this because we're explicitly passing --git-dir and --work-tree args
-	UseCustomPath: true,
-	SetupConfig:   func(config *config.AppConfig) {},
+	SetupConfig:  func(config *config.AppConfig) {},
 	SetupRepo: func(shell *Shell) {
 		// we're going to have a directory structure like this:
 		// project
@@ -26,7 +24,7 @@ var BareRepoWorktreeConfig = NewIntegrationTest(NewIntegrationTestArgs{
 		//
 		// 'repo' is the repository/directory that all lazygit tests start in
 
-		shell.CreateFileAndAdd("a/b/c/blah", "blah")
+		shell.CreateFileAndAdd("a/b/c/blah", "blah\n")
 		shell.Commit("initial commit")
 
 		shell.CreateFileAndAdd(".gitignore", ".bare/\n/repo\n")
