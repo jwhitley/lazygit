@@ -29,7 +29,7 @@ var BareRepoWorktreeConfig = NewIntegrationTest(NewIntegrationTestArgs{
 		shell.CreateFileAndAdd("a/b/c/blah", "blah")
 		shell.Commit("initial commit")
 
-		shell.CreateFileAndAdd(".gitignore", ".bare/\n")
+		shell.CreateFileAndAdd(".gitignore", ".bare/\n/repo\n")
 		shell.Commit("add .gitignore")
 
 		shell.Chdir("..")
@@ -49,7 +49,7 @@ var BareRepoWorktreeConfig = NewIntegrationTest(NewIntegrationTestArgs{
 		shell.RunCommand([]string{"git", "--git-dir=./.bare", "-c", "merge.ff=true", "merge", "origin/master"})
 
 		// we no longer need the original repo so remove it
-		shell.DeleteFile("repo")
+		// shell.DeleteFile("repo")
 
 		shell.UpdateFile("a/b/c/blah", "updated content\n")
 		shell.Chdir("a/b/c")
