@@ -54,11 +54,6 @@ func main() {
 		log.Fatal(usage)
 	}
 
-	// Integration tests may need to invoke a controlled git editor
-	// session. Unset the user's GIT_EDITOR, which can interfere
-	// with these tests.
-	os.Unsetenv("GIT_EDITOR")
-
 	switch os.Args[1] {
 	case "help":
 		fmt.Println(usage)
