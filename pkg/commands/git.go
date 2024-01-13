@@ -15,7 +15,6 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
 	"github.com/jesseduffield/lazygit/pkg/commands/patch"
 	"github.com/jesseduffield/lazygit/pkg/common"
-	"github.com/jesseduffield/lazygit/pkg/env"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
@@ -73,30 +72,15 @@ func NewGitCommand(
 	// to have forward slashes internally
 	currentPath = filepath.ToSlash(currentPath)
 
-	gitDir := env.GetGitDirEnv()
-	if gitDir != "" {
-		// we've been given the git directory explicitly so no need to navigate to it
-		_, err := cmn.Fs.Stat(gitDir)
-		if err != nil {
-			return nil, utils.WrapError(err)
-		}
-	} else {
-		// we haven't been given the git dir explicitly so we assume it's in the current working directory as `.git/` (or an ancestor directory)
-
-		rootDirectory, err := findWorktreeRoot(cmn.Fs, currentPath)
-		if err != nil {
-			return nil, utils.WrapError(err)
-		}
-		currentPath = rootDirectory
-		err = os.Chdir(rootDirectory)
-		if err != nil {
-			return nil, utils.WrapError(err)
-		}
-	}
-
 	repoPaths, err := git_commands.GetRepoPaths(osCommand.Cmd, currentPath)
 	if err != nil {
 		return nil, errors.Errorf("Error getting repo paths: %v", err)
+	}
+	currentPath = repoPaths.WorktreePath()
+
+	err = os.Chdir(currentPath)
+	if err != nil {
+		return nil, utils.WrapError(err)
 	}
 
 	repository, err := gogit.PlainOpenWithOptions(
