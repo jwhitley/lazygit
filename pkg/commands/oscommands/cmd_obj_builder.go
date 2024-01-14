@@ -27,13 +27,14 @@ type CmdObjBuilder struct {
 var _ ICmdObjBuilder = &CmdObjBuilder{}
 
 func (self *CmdObjBuilder) New(args []string) ICmdObj {
-	cmdObj := self.NewWithoutEnviron(args)
-	cmdObj.GetCmd().Env = os.Environ()
+	cmdObj := self.NewWithEnviron(args, os.Environ())
 	return cmdObj
 }
 
-func (self *CmdObjBuilder) NewWithoutEnviron(args []string) ICmdObj {
+// A command with explicit environment from env
+func (self *CmdObjBuilder) NewWithEnviron(args []string, env []string) ICmdObj {
 	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Env = env
 
 	return &CmdObj{
 		cmd:    cmd,

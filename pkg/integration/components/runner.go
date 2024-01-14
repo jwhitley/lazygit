@@ -5,23 +5,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
-	"slices"
 
 	lazycoreUtils "github.com/jesseduffield/lazycore/pkg/utils"
 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 	"github.com/samber/lo"
-)
-
-const (
-	PATH                      = "PATH"
-	LAZYGIT_ROOT_DIR          = "LAZYGIT_ROOT_DIR"
-	TEST_NAME_ENV_VAR         = "TEST_NAME"
-	SANDBOX_ENV_VAR           = "SANDBOX"
-	WAIT_FOR_DEBUGGER_ENV_VAR = "WAIT_FOR_DEBUGGER"
-	GIT_CONFIG_GLOBAL_ENV_VAR = "GIT_CONFIG_GLOBAL"
 )
 
 type RunTestArgs struct {
@@ -218,29 +207,12 @@ func getLazygitCommand(
 	})
 	cmdArgs = append(cmdArgs, resolvedExtraArgs...)
 
-	// Normalize the test environment by
-	cmdObj := osCommand.Cmd.NewWithoutEnviron(cmdArgs)
+	// lazygit requires that certain environment variables like $PATH
+	// be set. TestEnvironment() provides a restricted passthrough
+	// of os.Environ() for integration testing.
+	cmdObj := osCommand.Cmd.NewWithEnviron(cmdArgs, TestEnvironment())
 
 	cmdObj.SetWd(workingDir)
-
-	/// --- DEBUGGING PRINT CODE
-	pathEnv := fmt.Sprintf("%s=%s", PATH, os.Getenv("PATH"))
-	fmt.Println("DEBUG pathEnv:", pathEnv)
-	osEnv := os.Environ()
-	pathIndex := slices.IndexFunc(osEnv, func(s string) bool {
-		match, err := regexp.MatchString("^PATH=", s)
-		if err != nil {
-			return false
-		}
-		return match
-	})
-	if pathIndex != -1 {
-		fmt.Println("DEBUG os.Environ: ", osEnv[pathIndex])
-	}
-	/// --- DEBUGGING PRINT CODE
-	cmdObj.AddEnvVars(pathEnv)
-	// This also crashes in the same way:
-	// cmdObj.AddEnvVars(osEnv[pathIndex])
 
 	cmdObj.AddEnvVars(fmt.Sprintf("%s=%s", LAZYGIT_ROOT_DIR, rootDir))
 

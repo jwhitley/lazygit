@@ -58,7 +58,7 @@ func (self *Shell) runCommandWithOutput(args []string) (string, error) {
 
 func (self *Shell) runCommandWithOutputAndEnv(args []string, env []string) (string, error) {
 	cmd := exec.Command(args[0], args[1:]...)
-	cmd.Env = append(os.Environ(), env...)
+	cmd.Env = append(TestEnvironment(), env...)
 	cmd.Dir = self.dir
 
 	output, err := cmd.CombinedOutput()
