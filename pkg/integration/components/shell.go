@@ -461,8 +461,8 @@ func (self *Shell) CopyFile(source string, destination string) *Shell {
 	return self
 }
 
-// NOTE: this only takes effect before running the test;
-// the test will still run in the original directory
+// The final value passed to Chdir() during setup
+// will be the directory the test is run from.
 func (self *Shell) Chdir(path string) *Shell {
 	self.dir = filepath.Join(self.dir, path)
 
