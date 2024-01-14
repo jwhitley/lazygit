@@ -9,6 +9,7 @@ const (
 	GIT_CONFIG_GLOBAL_ENV_VAR = "GIT_CONFIG_GLOBAL"
 	LAZYGIT_ROOT_DIR          = "LAZYGIT_ROOT_DIR"
 	PATH                      = "PATH"
+	PWD                       = "PWD"
 	SANDBOX_ENV_VAR           = "SANDBOX"
 	TERM                      = "TERM"
 	TEST_NAME_ENV_VAR         = "TEST_NAME"

@@ -212,7 +212,12 @@ func getLazygitCommand(
 	// of os.Environ() for integration testing.
 	cmdObj := osCommand.Cmd.NewWithEnviron(cmdArgs, TestEnvironment())
 
+	// Integration tests related to symlink behavior need a PWD that
+	// preserves symlinks. By default, SetWd will set a symlink-resolved
+	// value for PWD. Here, we override that with the path (that may)
+	// contain a symlink to simulate behavior in a user's shell correctly.
 	cmdObj.SetWd(workingDir)
+	cmdObj.AddEnvVars(fmt.Sprintf("%s=%s", PWD, workingDir))
 
 	cmdObj.AddEnvVars(fmt.Sprintf("%s=%s", LAZYGIT_ROOT_DIR, rootDir))
 
