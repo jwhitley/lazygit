@@ -277,5 +277,6 @@ var tests = []*components.IntegrationTest{
 	worktree.ForceRemoveWorktree,
 	worktree.RemoveWorktreeFromBranch,
 	worktree.ResetWindowTabs,
+	worktree.SymlinkIntoRepoSubdir,
 	worktree.WorktreeInRepo,
 }
