@@ -39,7 +39,6 @@ func TestGetRepoPaths(t *testing.T) {
 			},
 			Path: "/path/to/repo",
 			Expected: &RepoPaths{
-				currentPath:        "/path/to/repo",
 				worktreePath:       "/path/to/repo",
 				worktreeGitDirPath: "/path/to/repo/.git",
 				repoPath:           "/path/to/repo",
@@ -68,7 +67,6 @@ func TestGetRepoPaths(t *testing.T) {
 			},
 			Path: "/path/to/repo/submodule1",
 			Expected: &RepoPaths{
-				currentPath:        "/path/to/repo/submodule1",
 				worktreePath:       "/path/to/repo/submodule1",
 				worktreeGitDirPath: "/path/to/repo/.git/modules/submodule1",
 				repoPath:           "/path/to/repo/submodule1",

@@ -12,19 +12,11 @@ import (
 )
 
 type RepoPaths struct {
-	currentPath        string
 	worktreePath       string
 	worktreeGitDirPath string
 	repoPath           string
 	repoGitDirPath     string
 	repoName           string
-}
-
-// Current working directory of the program. Currently, this will always
-// be the same as WorktreePath(), but in future we may support running
-// lazygit from inside a subdirectory of the worktree.
-func (self *RepoPaths) CurrentPath() string {
-	return self.currentPath
 }
 
 // Path to the current worktree. If we're in the main worktree, this will
@@ -62,7 +54,6 @@ func (self *RepoPaths) RepoName() string {
 // Returns the repo paths for a typical repo
 func MockRepoPaths(currentPath string) *RepoPaths {
 	return &RepoPaths{
-		currentPath:        currentPath,
 		worktreePath:       currentPath,
 		worktreeGitDirPath: path.Join(currentPath, ".git"),
 		repoPath:           currentPath,
@@ -101,7 +92,6 @@ func GetRepoPaths(
 	repoName := path.Base(repoPath)
 
 	return &RepoPaths{
-		currentPath:        currentPath,
 		worktreePath:       worktreePath,
 		worktreeGitDirPath: worktreeGitDirPath,
 		repoPath:           repoPath,
