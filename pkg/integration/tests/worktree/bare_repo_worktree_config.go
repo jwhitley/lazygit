@@ -14,7 +14,9 @@ var BareRepoWorktreeConfig = NewIntegrationTest(NewIntegrationTestArgs{
 	Description:  "Open lazygit in the worktree of a vcsh-style bare repo and add a file and commit",
 	ExtraCmdArgs: []string{"--git-dir={{.actualPath}}/.bare"},
 	Skip:         false,
-	SetupConfig:  func(config *config.AppConfig) {},
+	SetupConfig: func(config *config.AppConfig) {
+		config.UserConfig.Gui.ShowFileTree = false
+	},
 	SetupRepo: func(shell *Shell) {
 		// we're going to have a directory structure like this:
 		// project
@@ -67,8 +69,7 @@ var BareRepoWorktreeConfig = NewIntegrationTest(NewIntegrationTestArgs{
 		t.Views().Files().
 			IsFocused().
 			Lines(
-				Contains(" a/b/c"),  // shows as modified
-				Contains(" M blah"), // shows as modified
+				Contains(" M a/b/c/blah"), // shows as modified
 			).
 			PressPrimaryAction().
 			Press(keys.Files.CommitChanges)

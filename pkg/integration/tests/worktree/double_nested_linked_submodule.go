@@ -12,7 +12,9 @@ var DoubleNestedLinkedSubmodule = NewIntegrationTest(NewIntegrationTestArgs{
 	Description:  "Open lazygit in a link to a repo's double nested submodules",
 	ExtraCmdArgs: []string{},
 	Skip:         false,
-	SetupConfig:  func(config *config.AppConfig) {},
+	SetupConfig: func(config *config.AppConfig) {
+		config.UserConfig.Gui.ShowFileTree = false
+	},
 	SetupRepo: func(shell *Shell) {
 		// we're going to have a directory structure like this:
 		// project
@@ -69,8 +71,7 @@ var DoubleNestedLinkedSubmodule = NewIntegrationTest(NewIntegrationTestArgs{
 		t.Views().Files().
 			IsFocused().
 			Lines(
-				Contains(" a/b/c"),  // shows as modified
-				Contains(" M blah"), // shows as modified
+				Contains(" M a/b/c/blah"), // shows as modified
 			).
 			PressPrimaryAction().
 			Press(keys.Files.CommitChanges)
