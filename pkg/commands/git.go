@@ -74,9 +74,8 @@ func NewGitCommand(
 	if err != nil {
 		return nil, errors.Errorf("Error getting repo paths: %v", err)
 	}
-	currentPath = repoPaths.WorktreePath()
 
-	err = os.Chdir(currentPath)
+	err = os.Chdir(repoPaths.WorktreePath())
 	if err != nil {
 		return nil, utils.WrapError(err)
 	}
