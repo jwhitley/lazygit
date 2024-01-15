@@ -75,10 +75,6 @@ func GetRepoPaths(
 	cmd oscommands.ICmdObjBuilder,
 	currentPath string,
 ) (*RepoPaths, error) {
-	// worktreePath used to be the same as currentPath, but since we're
-	// already asking git about these things, ask it for the real
-	// worktree root path
-
 	gitDirOutput, err := callGitRevParse(cmd, "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree")
 	if err != nil {
 		return nil, err
