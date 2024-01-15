@@ -21,12 +21,8 @@ const (
 // to integration tests.
 var environmentWhitelist = [...]string{
 	GIT_CONFIG_GLOBAL_ENV_VAR,
-	LAZYGIT_ROOT_DIR,
 	PATH,
-	SANDBOX_ENV_VAR,
 	TERM,
-	TEST_NAME_ENV_VAR,
-	WAIT_FOR_DEBUGGER_ENV_VAR,
 }
 
 // Returns a copy of the environment filtered by
