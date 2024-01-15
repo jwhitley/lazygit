@@ -47,7 +47,7 @@ var BareRepoWorktreeConfig = NewIntegrationTest(NewIntegrationTestArgs{
 		shell.RunCommand([]string{"git", "--git-dir=./.bare", "-c", "merge.ff=true", "merge", "origin/master"})
 
 		// we no longer need the original repo so remove it
-		// shell.DeleteFile("repo")
+		shell.DeleteFile("repo")
 
 		shell.UpdateFile("a/b/c/blah", "updated content\n")
 		shell.Chdir("a/b/c")
