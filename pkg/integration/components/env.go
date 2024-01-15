@@ -19,7 +19,7 @@ const (
 // These environment variables must be set for lazygit to run.
 // As a result, each variable in this list will be passed through
 // to integration tests.
-var environmentWhitelist = [...]string{
+var environmentAllowlist = [...]string{
 	GIT_CONFIG_GLOBAL_ENV_VAR,
 	PATH,
 	TERM,
@@ -29,7 +29,7 @@ var environmentWhitelist = [...]string{
 // environmentWhitelist
 func TestEnvironment() []string {
 	env := []string{}
-	for _, envVar := range environmentWhitelist {
+	for _, envVar := range environmentAllowlist {
 		env = append(env, fmt.Sprintf("%s=%s", envVar, os.Getenv(envVar)))
 	}
 	return env
