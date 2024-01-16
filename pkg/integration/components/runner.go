@@ -153,10 +153,16 @@ func buildLazygit(testArgs RunTestArgs) error {
 // Sets up the fixture for test and returns the working directory to invoke
 // lazygit in.
 func createFixture(test *IntegrationTest, paths Paths, rootDir string) string {
-	shell := NewShell(paths.ActualRepo(), func(errorMsg string) { panic(errorMsg) })
-	shell.Init()
+	env := AllowedHostEnvironment()
+	env = append(env, fmt.Sprintf("%s=%s", GIT_CONFIG_GLOBAL_ENV_VAR, globalGitConfigPath(rootDir)))
+	env = append(env, fmt.Sprintf("%s=%s", PWD, paths.ActualRepo()))
 
-	os.Setenv(GIT_CONFIG_GLOBAL_ENV_VAR, globalGitConfigPath(rootDir))
+	shell := NewShell(
+		paths.ActualRepo(),
+		env,
+		func(errorMsg string) { panic(errorMsg) },
+	)
+	shell.Init()
 
 	test.SetupRepo(shell)
 
@@ -210,7 +216,7 @@ func getLazygitCommand(
 	// lazygit requires that certain environment variables like $PATH
 	// be set. TestEnvironment() provides a restricted passthrough
 	// of os.Environ() for integration testing.
-	cmdObj := osCommand.Cmd.NewWithEnviron(cmdArgs, TestEnvironment())
+	cmdObj := osCommand.Cmd.NewWithEnviron(cmdArgs, AllowedHostEnvironment())
 
 	// Integration tests related to symlink behavior need a PWD that
 	// preserves symlinks. By default, SetWd will set a symlink-resolved
