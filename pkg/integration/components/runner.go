@@ -213,9 +213,7 @@ func getLazygitCommand(
 	})
 	cmdArgs = append(cmdArgs, resolvedExtraArgs...)
 
-	// lazygit requires that certain environment variables like $PATH
-	// be set. TestEnvironment() provides a restricted passthrough
-	// of os.Environ() for integration testing.
+	// Pass through only allowed environment variables from the host environment.
 	cmdObj := osCommand.Cmd.NewWithEnviron(cmdArgs, AllowedHostEnvironment())
 
 	// Integration tests related to symlink behavior need a PWD that
