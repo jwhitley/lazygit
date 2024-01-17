@@ -42,10 +42,24 @@ var hostEnvironmentAllowlist = [...]string{
 
 // Returns a copy of the environment filtered by
 // hostEnvironmentAllowlist
-func AllowedHostEnvironment() []string {
+func allowedHostEnvironment() []string {
 	env := []string{}
 	for _, envVar := range hostEnvironmentAllowlist {
 		env = append(env, fmt.Sprintf("%s=%s", envVar, os.Getenv(envVar)))
 	}
+	return env
+}
+
+func NewTestEnvironment(rootDir string) []string {
+	env := allowedHostEnvironment()
+
+	// Set $HOME to control the global git config location for git
+	// versions <= 2.31.8
+	env = append(env, fmt.Sprintf("%s=%s", HOME, testPath(rootDir)))
+
+	// $GIT_CONFIG_GLOBAL controls global git config location for git
+	// versions >= 2.32.0
+	env = append(env, fmt.Sprintf("%s=%s", GIT_CONFIG_GLOBAL_ENV_VAR, globalGitConfigPath(rootDir)))
+
 	return env
 }

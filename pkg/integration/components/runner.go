@@ -153,14 +153,7 @@ func buildLazygit(testArgs RunTestArgs) error {
 // Sets up the fixture for test and returns the working directory to invoke
 // lazygit in.
 func createFixture(test *IntegrationTest, paths Paths, rootDir string) string {
-	env := AllowedHostEnvironment()
-	// $HOME and $GIT_CONFIG_NOGLOBAL control global git config location
-	// for older git, version <= 2.31.8
-	env = append(env, fmt.Sprintf("%s=%s", GIT_CONFIG_NOGLOBAL, "true"))
-	env = append(env, fmt.Sprintf("%s=%s", HOME, testHomePath(rootDir)))
-	// $GIT_CONFIG_GLOBAL controls global git config location for git
-	// versions >= 2.32.0
-	env = append(env, fmt.Sprintf("%s=%s", GIT_CONFIG_GLOBAL_ENV_VAR, globalGitConfigPath(rootDir)))
+	env := NewTestEnvironment(rootDir)
 
 	env = append(env, fmt.Sprintf("%s=%s", PWD, paths.ActualRepo()))
 	shell := NewShell(
@@ -175,12 +168,12 @@ func createFixture(test *IntegrationTest, paths Paths, rootDir string) string {
 	return shell.dir
 }
 
-func testHomePath(rootdir string) string {
+func testPath(rootdir string) string {
 	return filepath.Join(rootdir, "test")
 }
 
 func globalGitConfigPath(rootDir string) string {
-	return filepath.Join(testHomePath(rootDir), "global_git_config")
+	return filepath.Join(testPath(rootDir), "global_git_config")
 }
 
 func getGitVersion() (*git_commands.GitVersion, error) {
@@ -223,8 +216,9 @@ func getLazygitCommand(
 	})
 	cmdArgs = append(cmdArgs, resolvedExtraArgs...)
 
-	// Pass through only allowed environment variables from the host environment.
-	cmdObj := osCommand.Cmd.NewWithEnviron(cmdArgs, AllowedHostEnvironment())
+	// Use a limited environment for test isolation, including pass through
+	// of just allowed host environment variables
+	cmdObj := osCommand.Cmd.NewWithEnviron(cmdArgs, NewTestEnvironment(rootDir))
 
 	// Integration tests related to symlink behavior need a PWD that
 	// preserves symlinks. By default, SetWd will set a symlink-resolved
