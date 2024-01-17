@@ -154,9 +154,15 @@ func buildLazygit(testArgs RunTestArgs) error {
 // lazygit in.
 func createFixture(test *IntegrationTest, paths Paths, rootDir string) string {
 	env := AllowedHostEnvironment()
+	// $HOME and $GIT_CONFIG_NOGLOBAL control global git config location
+	// for older git, version <= 2.31.8
+	env = append(env, fmt.Sprintf("%s=%s", GIT_CONFIG_NOGLOBAL, "true"))
+	env = append(env, fmt.Sprintf("%s=%s", HOME, testHomePath(rootDir)))
+	// $GIT_CONFIG_GLOBAL controls global git config location for git
+	// versions >= 2.32.0
 	env = append(env, fmt.Sprintf("%s=%s", GIT_CONFIG_GLOBAL_ENV_VAR, globalGitConfigPath(rootDir)))
-	env = append(env, fmt.Sprintf("%s=%s", PWD, paths.ActualRepo()))
 
+	env = append(env, fmt.Sprintf("%s=%s", PWD, paths.ActualRepo()))
 	shell := NewShell(
 		paths.ActualRepo(),
 		env,
@@ -169,8 +175,12 @@ func createFixture(test *IntegrationTest, paths Paths, rootDir string) string {
 	return shell.dir
 }
 
+func testHomePath(rootdir string) string {
+	return filepath.Join(rootdir, "test")
+}
+
 func globalGitConfigPath(rootDir string) string {
-	return filepath.Join(rootDir, "test", "global_git_config")
+	return filepath.Join(testHomePath(rootDir), "global_git_config")
 }
 
 func getGitVersion() (*git_commands.GitVersion, error) {
