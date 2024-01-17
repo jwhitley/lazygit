@@ -70,7 +70,7 @@ func NewGitCommand(
 	// to have forward slashes internally
 	currentPath = filepath.ToSlash(currentPath)
 
-	repoPaths, err := git_commands.GetRepoPaths(osCommand.Cmd, currentPath)
+	repoPaths, err := git_commands.GetRepoPaths(osCommand.Cmd, version)
 	if err != nil {
 		return nil, errors.Errorf("Error getting repo paths: %v", err)
 	}

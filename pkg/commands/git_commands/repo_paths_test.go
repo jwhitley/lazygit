@@ -1,6 +1,7 @@
 package git_commands
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -9,19 +10,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type (
+	argFn func() []string
+	errFn func(getRevParseArgs argFn) error
+)
+
 type Scenario struct {
 	Name       string
-	BeforeFunc func(runner *oscommands.FakeCmdObjRunner)
+	BeforeFunc func(runner *oscommands.FakeCmdObjRunner, getRevParseArgs argFn)
 	Path       string
 	Expected   *RepoPaths
-	Err        error
+	Err        errFn
 }
 
 func TestGetRepoPaths(t *testing.T) {
 	scenarios := []Scenario{
 		{
 			Name: "typical case",
-			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
+			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner, getRevParseArgs argFn) {
 				// setup for main worktree
 				expectedOutput := []string{
 					// --show-toplevel
@@ -33,7 +39,7 @@ func TestGetRepoPaths(t *testing.T) {
 					// --show-superproject-working-tree
 				}
 				runner.ExpectGitArgs(
-					[]string{"rev-parse", "--path-format=absolute", "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree"},
+					append(getRevParseArgs(), "--show-toplevel", "--absolute-git-dir", "--git-common-dir", "--show-superproject-working-tree"),
 					strings.Join(expectedOutput, "\n"),
 					nil)
 			},
@@ -49,7 +55,7 @@ func TestGetRepoPaths(t *testing.T) {
 		},
 		{
 			Name: "submodule",
-			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
+			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner, getRevParseArgs argFn) {
 				expectedOutput := []string{
 					// --show-toplevel
 					"/path/to/repo/submodule1",
@@ -61,7 +67,7 @@ func TestGetRepoPaths(t *testing.T) {
 					"/path/to/repo",
 				}
 				runner.ExpectGitArgs(
-					[]string{"rev-parse", "--path-format=absolute", "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree"},
+					append(getRevParseArgs(), "--show-toplevel", "--absolute-git-dir", "--git-common-dir", "--show-superproject-working-tree"),
 					strings.Join(expectedOutput, "\n"),
 					nil)
 			},
@@ -77,15 +83,20 @@ func TestGetRepoPaths(t *testing.T) {
 		},
 		{
 			Name: "git rev-parse returns an error",
-			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner) {
+			BeforeFunc: func(runner *oscommands.FakeCmdObjRunner, getRevParseArgs argFn) {
 				runner.ExpectGitArgs(
-					[]string{"rev-parse", "--path-format=absolute", "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree"},
+					append(getRevParseArgs(), "--show-toplevel", "--absolute-git-dir", "--git-common-dir", "--show-superproject-working-tree"),
 					"",
 					errors.New("fatal: invalid gitfile format: /path/to/repo/worktree2/.git"))
 			},
 			Path:     "/path/to/repo/worktree2",
 			Expected: nil,
-			Err:      errors.New("'git rev-parse --path-format=absolute --show-toplevel --git-dir --git-common-dir --show-superproject-working-tree' failed: fatal: invalid gitfile format: /path/to/repo/worktree2/.git"),
+			Err: func(getRevParseArgs argFn) error {
+				args := strings.Join(getRevParseArgs(), " ")
+				return errors.New(
+					fmt.Sprintf("'git %v --show-toplevel --absolute-git-dir --git-common-dir --show-superproject-working-tree' failed: fatal: invalid gitfile format: /path/to/repo/worktree2/.git", args),
+				)
+			},
 		},
 	}
 
@@ -95,16 +106,28 @@ func TestGetRepoPaths(t *testing.T) {
 			runner := oscommands.NewFakeRunner(t)
 			cmd := oscommands.NewDummyCmdObjBuilder(runner)
 
-			// prepare the filesystem for the scenario
-			s.BeforeFunc(runner)
+			version, err := GetGitVersion(oscommands.NewDummyOSCommand())
+			if err != nil {
+				t.Fatal(err)
+			}
 
-			// run the function with the scenario path
-			repoPaths, err := GetRepoPaths(cmd, s.Path)
+			getRevParseArgs := func() []string {
+				args := []string{"rev-parse"}
+				if version.IsAtLeast(2, 31, 0) {
+					args = append(args, "--path-format=absolute")
+				}
+				return args
+			}
+			// prepare the filesystem for the scenario
+			s.BeforeFunc(runner, getRevParseArgs)
+
+			repoPaths, err := GetRepoPaths(cmd, version)
 
 			// check the error and the paths
 			if s.Err != nil {
+				scenarioErr := s.Err(getRevParseArgs)
 				assert.Error(t, err)
-				assert.EqualError(t, err, s.Err.Error())
+				assert.EqualError(t, err, scenarioErr.Error())
 			} else {
 				assert.Nil(t, err)
 				assert.Equal(t, s.Expected, repoPaths)

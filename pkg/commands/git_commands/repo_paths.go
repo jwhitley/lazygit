@@ -64,9 +64,9 @@ func MockRepoPaths(currentPath string) *RepoPaths {
 
 func GetRepoPaths(
 	cmd oscommands.ICmdObjBuilder,
-	currentPath string,
+	version *GitVersion,
 ) (*RepoPaths, error) {
-	gitDirOutput, err := callGitRevParse(cmd, "--show-toplevel", "--git-dir", "--git-common-dir", "--show-superproject-working-tree")
+	gitDirOutput, err := callGitRevParse(cmd, version, "--show-toplevel", "--absolute-git-dir", "--git-common-dir", "--show-superproject-working-tree")
 	if err != nil {
 		return nil, err
 	}
@@ -102,17 +102,19 @@ func GetRepoPaths(
 
 func callGitRevParse(
 	cmd oscommands.ICmdObjBuilder,
+	version *GitVersion,
 	gitRevArgs ...string,
 ) (string, error) {
-	return callGitRevParseWithDir(cmd, "", gitRevArgs...)
+	return callGitRevParseWithDir(cmd, version, "", gitRevArgs...)
 }
 
 func callGitRevParseWithDir(
 	cmd oscommands.ICmdObjBuilder,
+	version *GitVersion,
 	dir string,
 	gitRevArgs ...string,
 ) (string, error) {
-	gitRevParse := NewGitCmd("rev-parse").Arg("--path-format=absolute").Arg(gitRevArgs...)
+	gitRevParse := NewGitCmd("rev-parse").ArgIf(version.IsAtLeast(2, 31, 0), "--path-format=absolute").Arg(gitRevArgs...)
 	if dir != "" {
 		gitRevParse.Dir(dir)
 	}
