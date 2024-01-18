@@ -3,6 +3,7 @@ package git_commands
 import (
 	ioFs "io/fs"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-errors/errors"
@@ -18,6 +19,8 @@ type RepoPaths struct {
 	repoGitDirPath     string
 	repoName           string
 }
+
+var gitPathFormatVersion GitVersion = GitVersion{2, 31, 0, ""}
 
 // Path to the current worktree. If we're in the main worktree, this will
 // be the same as RepoPath()
@@ -74,6 +77,12 @@ func GetRepoPaths(
 	gitDirResults := strings.Split(utils.NormalizeLinefeeds(gitDirOutput), "\n")
 	worktreePath := gitDirResults[0]
 	worktreeGitDirPath := gitDirResults[1]
+	if version.IsOlderThanVersion(&gitPathFormatVersion) {
+		worktreeGitDirPath, err = filepath.Abs(worktreeGitDirPath)
+		if err != nil {
+			return nil, err
+		}
+	}
 	repoGitDirPath := gitDirResults[2]
 
 	// If we're in a submodule, --show-superproject-working-tree will return
@@ -114,7 +123,7 @@ func callGitRevParseWithDir(
 	dir string,
 	gitRevArgs ...string,
 ) (string, error) {
-	gitRevParse := NewGitCmd("rev-parse").ArgIf(version.IsAtLeast(2, 31, 0), "--path-format=absolute").Arg(gitRevArgs...)
+	gitRevParse := NewGitCmd("rev-parse").ArgIf(version.IsAtLeastVersion(&gitPathFormatVersion), "--path-format=absolute").Arg(gitRevArgs...)
 	if dir != "" {
 		gitRevParse.Dir(dir)
 	}
