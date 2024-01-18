@@ -77,13 +77,13 @@ func GetRepoPaths(
 	gitDirResults := strings.Split(utils.NormalizeLinefeeds(gitDirOutput), "\n")
 	worktreePath := gitDirResults[0]
 	worktreeGitDirPath := gitDirResults[1]
+	repoGitDirPath := gitDirResults[2]
 	if version.IsOlderThanVersion(&gitPathFormatVersion) {
-		worktreeGitDirPath, err = filepath.Abs(worktreeGitDirPath)
+		repoGitDirPath, err = filepath.Abs(repoGitDirPath)
 		if err != nil {
 			return nil, err
 		}
 	}
-	repoGitDirPath := gitDirResults[2]
 
 	// If we're in a submodule, --show-superproject-working-tree will return
 	// a value, meaning gitDirResults will be length 4. In that case
