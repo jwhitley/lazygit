@@ -2,7 +2,6 @@ package commands
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/go-errors/errors"
@@ -61,15 +60,6 @@ func NewGitCommand(
 	osCommand *oscommands.OSCommand,
 	gitConfig git_config.IGitConfig,
 ) (*GitCommand, error) {
-	currentPath, err := os.Getwd()
-	if err != nil {
-		return nil, utils.WrapError(err)
-	}
-
-	// converting to forward slashes for the sake of windows (which uses backwards slashes). We want everything
-	// to have forward slashes internally
-	currentPath = filepath.ToSlash(currentPath)
-
 	repoPaths, err := git_commands.GetRepoPaths(osCommand.Cmd, version)
 	if err != nil {
 		return nil, errors.Errorf("Error getting repo paths: %v", err)
